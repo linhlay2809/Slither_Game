@@ -8,6 +8,18 @@ TextureImporter:
   - first:
       213: 1763989116612304091
     second: button_1
+  - first:
+      213: -5033884579438549468
+    second: button_2
+  - first:
+      213: 1120241560109220500
+    second: button_3
+  - first:
+      213: -8506607990533810358
+    second: button_4
+  - first:
+      213: 4832351623212807583
+    second: button_5
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -119,7 +131,34 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
+      outline:
+      - - {x: 157.5, y: -19}
+        - {x: 154.5, y: -28}
+        - {x: 150.5, y: -35}
+        - {x: 144.5, y: -42}
+        - {x: 136.5, y: -48}
+        - {x: 129.5, y: -51}
+        - {x: 119.5, y: -53}
+        - {x: -119.5, y: -53}
+        - {x: -133.5, y: -49}
+        - {x: -145.5, y: -41}
+        - {x: -153.5, y: -30}
+        - {x: -156.5, y: -21}
+        - {x: -159.5, y: -9}
+        - {x: -159.5, y: 8}
+        - {x: -156.5, y: 20}
+        - {x: -153.5, y: 29}
+        - {x: -146.5, y: 39}
+        - {x: -138.5, y: 47}
+        - {x: -127.5, y: 52}
+        - {x: -120.5, y: 53}
+        - {x: 123.5, y: 53}
+        - {x: 135.5, y: 49}
+        - {x: 144.5, y: 42}
+        - {x: 152.5, y: 32}
+        - {x: 157.5, y: 21}
+        - {x: 159.5, y: 7}
+        - {x: 159.5, y: -8}
       physicsShape: []
       tessellationDetail: 0
       bones: []
@@ -176,6 +215,198 @@ TextureImporter:
       bones: []
       spriteID: bdcd45b61c2fa7810800000000000000
       internalID: 1763989116612304091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: button_2
+      rect:
+        serializedVersion: 2
+        x: 63
+        y: 480
+        width: 329
+        height: 116
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 157.5, y: -19}
+        - {x: 154.5, y: -28}
+        - {x: 150.5, y: -35}
+        - {x: 144.5, y: -42}
+        - {x: 136.5, y: -48}
+        - {x: 129.5, y: -51}
+        - {x: 119.5, y: -53}
+        - {x: -119.5, y: -53}
+        - {x: -133.5, y: -49}
+        - {x: -145.5, y: -41}
+        - {x: -153.5, y: -30}
+        - {x: -156.5, y: -21}
+        - {x: -159.5, y: -9}
+        - {x: -159.5, y: 8}
+        - {x: -156.5, y: 20}
+        - {x: -153.5, y: 29}
+        - {x: -146.5, y: 39}
+        - {x: -138.5, y: 47}
+        - {x: -127.5, y: 52}
+        - {x: -120.5, y: 53}
+        - {x: 123.5, y: 53}
+        - {x: 135.5, y: 49}
+        - {x: 144.5, y: 42}
+        - {x: 152.5, y: 32}
+        - {x: 157.5, y: 21}
+        - {x: 159.5, y: 7}
+        - {x: 159.5, y: -8}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 426af3a45ac042ab0800000000000000
+      internalID: -5033884579438549468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: button_3
+      rect:
+        serializedVersion: 2
+        x: 61
+        y: 204
+        width: 333
+        height: 118
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 157.5, y: -19}
+        - {x: 154.5, y: -28}
+        - {x: 150.5, y: -35}
+        - {x: 144.5, y: -42}
+        - {x: 136.5, y: -48}
+        - {x: 129.5, y: -51}
+        - {x: 119.5, y: -53}
+        - {x: -119.5, y: -53}
+        - {x: -133.5, y: -49}
+        - {x: -145.5, y: -41}
+        - {x: -153.5, y: -30}
+        - {x: -156.5, y: -21}
+        - {x: -159.5, y: -9}
+        - {x: -159.5, y: 8}
+        - {x: -156.5, y: 20}
+        - {x: -153.5, y: 29}
+        - {x: -146.5, y: 39}
+        - {x: -138.5, y: 47}
+        - {x: -127.5, y: 52}
+        - {x: -120.5, y: 53}
+        - {x: 123.5, y: 53}
+        - {x: 135.5, y: 49}
+        - {x: 144.5, y: 42}
+        - {x: 152.5, y: 32}
+        - {x: 157.5, y: 21}
+        - {x: 159.5, y: 7}
+        - {x: 159.5, y: -8}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49280fc73c5eb8f00800000000000000
+      internalID: 1120241560109220500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: button_4
+      rect:
+        serializedVersion: 2
+        x: 408
+        y: 480
+        width: 329
+        height: 116
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 157.5, y: -19}
+        - {x: 154.5, y: -28}
+        - {x: 150.5, y: -35}
+        - {x: 144.5, y: -42}
+        - {x: 136.5, y: -48}
+        - {x: 129.5, y: -51}
+        - {x: 119.5, y: -53}
+        - {x: -119.5, y: -53}
+        - {x: -133.5, y: -49}
+        - {x: -145.5, y: -41}
+        - {x: -153.5, y: -30}
+        - {x: -156.5, y: -21}
+        - {x: -159.5, y: -9}
+        - {x: -159.5, y: 8}
+        - {x: -156.5, y: 20}
+        - {x: -153.5, y: 29}
+        - {x: -146.5, y: 39}
+        - {x: -138.5, y: 47}
+        - {x: -127.5, y: 52}
+        - {x: -120.5, y: 53}
+        - {x: 123.5, y: 53}
+        - {x: 135.5, y: 49}
+        - {x: 144.5, y: 42}
+        - {x: 152.5, y: 32}
+        - {x: 157.5, y: 21}
+        - {x: 159.5, y: 7}
+        - {x: 159.5, y: -8}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a479bb04a1572f980800000000000000
+      internalID: -8506607990533810358
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: button_5
+      rect:
+        serializedVersion: 2
+        x: 62
+        y: 66
+        width: 332
+        height: 118
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 157.5, y: -19}
+        - {x: 154.5, y: -28}
+        - {x: 150.5, y: -35}
+        - {x: 144.5, y: -42}
+        - {x: 136.5, y: -48}
+        - {x: 129.5, y: -51}
+        - {x: 119.5, y: -53}
+        - {x: -119.5, y: -53}
+        - {x: -133.5, y: -49}
+        - {x: -145.5, y: -41}
+        - {x: -153.5, y: -30}
+        - {x: -156.5, y: -21}
+        - {x: -159.5, y: -9}
+        - {x: -159.5, y: 8}
+        - {x: -156.5, y: 20}
+        - {x: -153.5, y: 29}
+        - {x: -146.5, y: 39}
+        - {x: -138.5, y: 47}
+        - {x: -127.5, y: 52}
+        - {x: -120.5, y: 53}
+        - {x: 123.5, y: 53}
+        - {x: 135.5, y: 49}
+        - {x: 144.5, y: 42}
+        - {x: 152.5, y: 32}
+        - {x: 157.5, y: 21}
+        - {x: 159.5, y: 7}
+        - {x: 159.5, y: -8}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f95b16bc236ff0340800000000000000
+      internalID: 4832351623212807583
       vertices: []
       indices: 
       edges: []
