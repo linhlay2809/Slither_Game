@@ -79,35 +79,12 @@ public class RobotAction : MonoBehaviour {
                 robotBody.Add(newPart);
             }
         }  
-        else if (obj.transform.tag == "Boundary")
-        {
-            while (robotBody.Count > 0)
-            {
-                int lastIndex = robotBody.Count - 1;
-                Transform lastBodyPart = robotBody[lastIndex].transform;
-                robotBody.RemoveAt(lastIndex);
-                Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)],
-                    lastBodyPart.position, Quaternion.identity);
-                Destroy(lastBodyPart.gameObject);
-            }
-            GameObject head = GameObject.Find(this.name);
-            Destroy(head);
-        }
-        else if ((obj.transform.tag == "Snake") || (obj.transform.tag == "Player") || (obj.transform.tag == "Robot"))
-        {
-            while (robotBody.Count > 0)
-            {
-                int lastIndex = robotBody.Count - 1;
-                Transform lastBodyPart = robotBody[lastIndex].transform;
-                robotBody.RemoveAt(lastIndex);
-                Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)],
-                    lastBodyPart.position, Quaternion.identity);
-                Destroy(lastBodyPart.gameObject);
-            }
-            GameObject head = GameObject.Find(this.name);
-            Destroy(head);
-        }
-        else if ((obj.transform.tag == "Body"))
+
+        
+    }
+    void OnTriggerEnter(Collider obj)
+    {
+        if ((obj.transform.tag == "Snake"))
         {
             bool isMyself = false;
             Transform myself = obj.gameObject.transform;
@@ -118,21 +95,24 @@ public class RobotAction : MonoBehaviour {
             }
             if (isMyself == false)
             {
-                while (robotBody.Count > 0)
-                {
-                    int lastIndex = robotBody.Count - 1;
-                    Transform lastBodyPart = robotBody[lastIndex].transform;
-                    robotBody.RemoveAt(lastIndex);
-                    Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)],
-                        lastBodyPart.position, Quaternion.identity);
-                    Destroy(lastBodyPart.gameObject);
-                }
-                GameObject head = GameObject.Find(this.name);
-                Destroy(head);
+                Dead();
             }
         }
     }
-    
+    void Dead()
+    {
+        while (robotBody.Count > 0)
+        {
+            int lastIndex = robotBody.Count - 1;
+            Transform lastBodyPart = robotBody[lastIndex].transform;
+            robotBody.RemoveAt(lastIndex);
+            Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)],
+                lastBodyPart.position, Quaternion.identity);
+            Destroy(lastBodyPart.gameObject);
+        }
+        GameObject head = GameObject.Find(this.name);
+        Destroy(head);
+    }
     /* Make the snake head move forward all the time*/
     void RobotMove()
     {

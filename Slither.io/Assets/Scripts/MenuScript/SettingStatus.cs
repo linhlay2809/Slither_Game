@@ -40,7 +40,7 @@ public class SettingStatus : MonoBehaviour {
 			PlayerPrefs.SetInt ("removeAds", 0);		
 		}
 		//When button "PlayOnline" or "PlayWithAI" is clicked, set the nickname and load game scene.
-		else if (ButtonName == "PlayOnline" || ButtonName == "PlayWithAI") {
+		else if (ButtonName == "PlayOnline" ) {
 			input = GameObject.Find ("Nickname").GetComponent<InputField> ();
 			PlayerPrefs.SetString ("nickname",input.text);		
 			SceneManager.LoadScene("Slither.io");
