@@ -515,17 +515,7 @@ public class SnakeMovement : MonoBehaviour
         }
     }
 
-	// added by Yue Chen
-	public void ShowAd()
-	{
-//		if (Advertisement.IsReady ()) {
-//			Advertisement.Show ();
-//		} else {
-//			Advertisement.Initialize ("1165124");
-//		}
 
-
-	}
 
 	public void SetScore(int curScore){
 		int bestScore;
