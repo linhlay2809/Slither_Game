@@ -6,7 +6,7 @@ using UnityEngine.Advertisements;
 public class BackMenu: MonoBehaviour {
 	public void back(){
 
-		SceneManager.LoadScene ("Menu");
+		SceneManager.LoadScene ("Loading");
 	}
 
 }

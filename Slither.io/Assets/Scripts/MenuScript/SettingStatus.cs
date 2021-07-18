@@ -43,7 +43,7 @@ public class SettingStatus : MonoBehaviour {
 		else if (ButtonName == "PlayOnline" ) {
 			input = GameObject.Find ("Nickname").GetComponent<InputField> ();
 			PlayerPrefs.SetString ("nickname",input.text);		
-			SceneManager.LoadScene("Slither.io");
+			SceneManager.LoadScene("Loading");
 
 		
 		}

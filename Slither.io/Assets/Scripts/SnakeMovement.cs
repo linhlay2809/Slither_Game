@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-
+using Photon.Pun;
 using UnityEngine.Advertisements;
 
 public class SnakeMovement : MonoBehaviour
@@ -14,8 +14,9 @@ public class SnakeMovement : MonoBehaviour
 	private string nickName;
 
     public List<Transform> bodyParts = new List<Transform>();   // Records the location information of body parts of the snake
-    public List<GameObject> Robots = new List<GameObject>();    // Records the information of Robots
-    
+
+    public Spawns spawn;
+
     public float snakeWalkSpeed = 3.5f; // Called in SnakeMove()
     private float snakeRunSpeed = 7.0f;  // Called in SnakeRun()
     private bool isRunning; // Called in SnakeRun()
@@ -41,41 +42,49 @@ public class SnakeMovement : MonoBehaviour
     //	##### added by Yue Chen #####
     public Text countText;
     public int length;
-	
+
+    PhotonView view;
     // use this for initialization
     void Start() {
-        GenerateFoodBeforeBegin();
-        GenerateRobotBeforeBegin();
+        spawn = GameObject.FindGameObjectWithTag("Spawn").GetComponent<Spawns>();
 		//	##### added by Yue Chen #####
 		moveWay = PlayerPrefs.GetInt("moveWayID",1);    // It determines how to control the movement of snake, gained from initial interface
 		// It determines the skin of the snake, gained from initial interface
 		skinID = PlayerPrefs.GetInt("skinID",1);
 		nickName = PlayerPrefs.GetString("nickname","");
+        view = GetComponent<PhotonView>();
     }
 	
     // update is called once per frame
     void Update()
     {
-        MouseControlSnake();
-        ColorSnake(skinID);
-        GenerateFoodAndItem();
-        SnakeRun();
-		SetScore (length);
-        if (snakeWalkSpeed < 4)
+        if (view.IsMine)
         {
-            snakeWalkSpeed = 4;
+            MouseControlSnake();
+            ColorSnake(skinID);
+            SnakeRun();
+            SetScore(length);
+            if (snakeWalkSpeed < 4)
+            {
+                snakeWalkSpeed = 4;
+            }
         }
+        
     }
 
     void FixedUpdate()
     {
-        SnakeMove();
-        SetBodySizeAndSmoothTime();
-        CameraFollowSnake();
-        SnakeGlowing(isRunning);
-        SnakeMoveAdjust();
-        //	##### added by Yue Chen #####
-        countText.text = "G o o d  j o b  !  " + nickName + "\nY o u r  L e n g t h  :  " + length;
+        if (view.IsMine)
+        {
+            SnakeMove();
+            SetBodySizeAndSmoothTime();
+            CameraFollowSnake();
+            SnakeGlowing(isRunning);
+            SnakeMoveAdjust();
+            //	##### added by Yue Chen #####
+            countText.text = "G o o d  j o b  !  " + nickName + "\nY o u r  L e n g t h  :  " + length;
+        }
+            
     }
     void OnCollisionEnter(Collision obj)
     {
@@ -83,7 +92,7 @@ public class SnakeMovement : MonoBehaviour
         {
             
             Destroy(obj.gameObject);
-            curAmountOfFood--;
+            spawn.curAmountOfFood--;
             if (SizeUp(foodCounter) == false)
             {
                 length++;
@@ -133,14 +142,14 @@ public class SnakeMovement : MonoBehaviour
             if (obj.transform.GetComponent<ParticleSystem>().startColor == new Color32(255, 0, 255, 255))
             {
                 Destroy(obj.gameObject);
-                curAmountOfItem--;
+                spawn.curAmountOfItem--;
                 snakeWalkSpeed += 3.5f;
                 StartCoroutine("speedUpTime");
             }
             if (obj.transform.GetComponent<ParticleSystem>().startColor == new Color32(0, 255, 0, 255))
             {
                 Destroy(obj.gameObject);
-                curAmountOfItem--;
+                spawn.curAmountOfItem--;
                 if (bodyParts.Count > 4)
                 {
                     isRunning = true;
@@ -178,7 +187,7 @@ public class SnakeMovement : MonoBehaviour
             int lastIndex = bodyParts.Count - 1;
             Transform lastBodyPart = bodyParts[lastIndex].transform;
             bodyParts.RemoveAt(lastIndex);
-            GameObject newFood = Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)], lastBodyPart.position, Quaternion.identity) as GameObject;
+            GameObject newFood = Instantiate(spawn.foodGenerateTarget[Random.Range(0, spawn.foodGenerateTarget.Length)], lastBodyPart.position, Quaternion.identity) as GameObject;
             newFood.transform.parent = GameObject.Find("Foods").transform;
             Destroy(lastBodyPart.gameObject);
         }
@@ -186,7 +195,7 @@ public class SnakeMovement : MonoBehaviour
 
         Destroy(head);
 
-        SceneManager.LoadScene("Menu");
+        SceneManager.LoadScene("Lobby");
     }
     //	##### added by Morgan #####
     IEnumerator speedUpTime()
@@ -245,7 +254,7 @@ public class SnakeMovement : MonoBehaviour
             part.GetComponent<SnakeBodyActions>().smoothTime = bodySmoothTime;
         }
     }
-
+    /*
     public int curAmountOfRobot, maxAmountOfRobot = 30;  // The max amount of robots in the map
     public GameObject[] robotGenerateTarget;     // Store the objects of robot snakes
 
@@ -276,7 +285,7 @@ public class SnakeMovement : MonoBehaviour
         }
     }
 
-    /* Gernate 200 food points before game start*/
+    /* Gernate 200 food points before game start
     void GenerateFoodBeforeBegin()
     {
         int i = 0;
@@ -301,7 +310,7 @@ public class SnakeMovement : MonoBehaviour
 
 
 
-    /* Generate food points every few seconds until there are enough points on the map*/
+    /* Generate food points every few seconds until there are enough points on the map
     public int curAmountOfFood, maxAmountOfFood = 600;  // The max amount of food in the map
     public int curAmountOfItem, maxAmountOfItem = 60;  // The max amount of item in the map
     private float foodGenerateEveryXSecond = 0.1f;   // Generate a food point every 3 seconds
@@ -425,9 +434,9 @@ public class SnakeMovement : MonoBehaviour
         int lastIndex = bodyParts.Count - 1;
         Transform lastBodyPart = bodyParts[lastIndex].transform;
         bodyParts.RemoveAt(lastIndex);
-        Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)], lastBodyPart.position, Quaternion.identity);
+        Instantiate(spawn.foodGenerateTarget[Random.Range(0, spawn.foodGenerateTarget.Length)], lastBodyPart.position, Quaternion.identity);
         Destroy(lastBodyPart.gameObject);
-        curAmountOfFood++;
+        spawn.curAmountOfFood++;
         foodCounter--;
 		length--;
         SnakeScaleChange();
