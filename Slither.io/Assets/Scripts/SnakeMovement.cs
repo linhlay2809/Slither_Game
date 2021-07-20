@@ -42,8 +42,10 @@ public class SnakeMovement : MonoBehaviour
     //	##### added by Yue Chen #####
     public Text countText;
     public int length;
-
+    public int id; // id player
     PhotonView view;
+
+    Vector3 currentPos;
     // use this for initialization
     void Start() {
         spawn = GameObject.FindGameObjectWithTag("Spawn").GetComponent<Spawns>();
@@ -53,6 +55,8 @@ public class SnakeMovement : MonoBehaviour
 		skinID = PlayerPrefs.GetInt("skinID",1);
 		nickName = PlayerPrefs.GetString("nickname","");
         view = GetComponent<PhotonView>();
+        // Get id gameobject
+        id = view.ViewID;
     }
 	
     // update is called once per frame
@@ -98,7 +102,7 @@ public class SnakeMovement : MonoBehaviour
                 length++;
                 foodCounter++;
                 // The contents in 'if' shouldn't be exectued in logic as we always have several body parts
-                Vector3 currentPos;
+                
                 if (bodyParts.Count == 0)
                 {
                     currentPos = transform.position;
@@ -107,16 +111,14 @@ public class SnakeMovement : MonoBehaviour
                 {
                     currentPos = bodyParts[bodyParts.Count - 1].position;
                 }
-                Transform newPart = Instantiate(addBodyPart, currentPos, Quaternion.identity) as Transform;
-                newPart.parent = GameObject.Find("SnakeBodies").transform;
-                bodyParts.Add(newPart);
+                AddBodyPart();
             }
             else
             {
                 length++;
                 foodCounter++;
                 // The contents in 'if' shouldn't be exectued in logic as we always have several body parts
-                Vector3 currentPos;
+                
                 if (bodyParts.Count == 0)
                 {
                     currentPos = transform.position;
@@ -125,9 +127,7 @@ public class SnakeMovement : MonoBehaviour
                 {
                     currentPos = bodyParts[bodyParts.Count - 1].position;
                 }
-                Transform newPart = Instantiate(addBodyPart, currentPos, Quaternion.identity) as Transform;
-                newPart.parent = GameObject.Find("SnakeBodies").transform;
-                bodyParts.Add(newPart);
+                AddBodyPart();
                 curSize += Vector3.one * growRate;
                 bodyPartSmoothTime += 0.01f;
                 transform.localScale = curSize;
@@ -158,6 +158,15 @@ public class SnakeMovement : MonoBehaviour
             }
         }
     }
+    void AddBodyPart()
+    {
+        Transform newPart = Instantiate(addBodyPart, currentPos, Quaternion.identity) as Transform;
+        newPart.parent = GameObject.Find("SnakeBodies").transform;
+        newPart.gameObject.GetComponent<SnakeBodyActions>().idPlayer = id;
+        bodyParts.Add(newPart);
+    }
+
+
     /* When the head encounters an object, figure out what to do*/
     void OnTriggerEnter(Collider obj)
     {
@@ -182,18 +191,20 @@ public class SnakeMovement : MonoBehaviour
     }
     void Dead()
     {
-        while (bodyParts.Count > 0)
+        if (view.IsMine)
         {
-            int lastIndex = bodyParts.Count - 1;
-            Transform lastBodyPart = bodyParts[lastIndex].transform;
-            bodyParts.RemoveAt(lastIndex);
-            GameObject newFood = Instantiate(spawn.foodGenerateTarget[Random.Range(0, spawn.foodGenerateTarget.Length)], lastBodyPart.position, Quaternion.identity) as GameObject;
-            newFood.transform.parent = GameObject.Find("Foods").transform;
-            Destroy(lastBodyPart.gameObject);
+            while (bodyParts.Count > 0)
+            {
+                int lastIndex = bodyParts.Count - 1;
+                Transform lastBodyPart = bodyParts[lastIndex].transform;
+                bodyParts.RemoveAt(lastIndex);
+                GameObject newFood = Instantiate(spawn.foodGenerateTarget[Random.Range(0, spawn.foodGenerateTarget.Length)], lastBodyPart.position, Quaternion.identity) as GameObject;
+                newFood.transform.parent = GameObject.Find("Foods").transform;
+                Destroy(lastBodyPart.gameObject);
+            }
+            Destroy(gameObject);
         }
-        GameObject head = GameObject.FindGameObjectWithTag("Player");
-
-        Destroy(head);
+        
 
         SceneManager.LoadScene("Lobby");
     }
@@ -254,125 +265,7 @@ public class SnakeMovement : MonoBehaviour
             part.GetComponent<SnakeBodyActions>().smoothTime = bodySmoothTime;
         }
     }
-    /*
-    public int curAmountOfRobot, maxAmountOfRobot = 30;  // The max amount of robots in the map
-    public GameObject[] robotGenerateTarget;     // Store the objects of robot snakes
-
-    // create robots
-    void GenerateRobotBeforeBegin()
-    {
-        int i = 0;
-        while (i < 20)
-        {
-            int r = Random.Range(0, 2);
-            Vector3 robotPos;
-            if (r == 0)
-            {
-                robotPos = new Vector3(Random.Range(-30, 30), Random.Range(-30, 30), 0);
-            }
-            else
-            {
-                robotPos = new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), 0);
-            }
-            GameObject newRobot = Instantiate(robotGenerateTarget[Random.Range(0, robotGenerateTarget.Length)],
-                robotPos, Quaternion.identity) as GameObject;
-            newRobot.name = "Robot" + i;
-            Robots.Add(newRobot);
-            newRobot.GetComponent<RobotAction>().SkinId = Random.Range(1, 4);
-            newRobot.transform.parent = GameObject.Find("Robots").transform;
-            curAmountOfRobot++;
-            i++;
-        }
-    }
-
-    /* Gernate 200 food points before game start
-    void GenerateFoodBeforeBegin()
-    {
-        int i = 0;
-        while (i < 200)
-        {
-            int r = Random.Range(0, 2);
-            Vector3 foodPos;
-            if (r == 0)
-            {
-                foodPos = new Vector3(Random.Range(-30, 30), Random.Range(-30, 30), 0);
-            }
-            else
-            {
-                foodPos = new Vector3(Random.Range(-60, 60), Random.Range(-60, 60), 0);
-            }
-            GameObject newFood = Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)], foodPos, Quaternion.identity) as GameObject;
-            newFood.transform.parent = GameObject.Find("Foods").transform;
-            curAmountOfFood++;
-            i++;
-        }
-    }
-
-
-
-    /* Generate food points every few seconds until there are enough points on the map
-    public int curAmountOfFood, maxAmountOfFood = 600;  // The max amount of food in the map
-    public int curAmountOfItem, maxAmountOfItem = 60;  // The max amount of item in the map
-    private float foodGenerateEveryXSecond = 0.1f;   // Generate a food point every 3 seconds
-    public GameObject[] foodGenerateTarget;     // Store the objects of food points
-    public GameObject[] itemGenerateTarget;     // Store the objects of item
-    void GenerateFoodAndItem()
-    {
-        StartCoroutine("RunGenerateFoodAndItem", foodGenerateEveryXSecond);
-    }
-    IEnumerator RunGenerateFoodAndItem(float time)
-    {
-        yield return new WaitForSeconds(time);
-        StopCoroutine("RunGenerateFoodAndItem");
-        if (curAmountOfFood < maxAmountOfFood)
-        {
-            int r = Random.Range(0, 4);
-            Vector3 foodPos;
-            if (r == 0)
-            {
-                foodPos = new Vector3(Random.Range(-30, 30), Random.Range(-30, 30), 0);
-            }
-            else if (r <= 1)
-            {
-                foodPos = new Vector3(Random.Range(-60, 60), Random.Range(-60, 60), 0);
-            }
-            else if (r <= 2)
-            {
-                foodPos = new Vector3(Random.Range(-90, 90), Random.Range(-90, 90), 0);
-            }
-            else
-            {
-                foodPos = new Vector3(Random.Range(-120, 120), Random.Range(-120, 120), 0);
-            }
-            GameObject newFood = Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)], foodPos, Quaternion.identity) as GameObject;
-            newFood.transform.parent = GameObject.Find("Foods").transform;
-            curAmountOfFood++;
-        }
-        if (curAmountOfItem < maxAmountOfItem)
-        {
-            int r = Random.Range(0, 4);
-            Vector3 itemPos;
-            if (r == 0)
-            {
-                itemPos = new Vector3(Random.Range(-30, 30), Random.Range(-30, 30), 0);
-            }
-            else if (r <= 1)
-            {
-                itemPos = new Vector3(Random.Range(-60, 60), Random.Range(-60, 60), 0);
-            }
-            else if (r <= 2)
-            {
-                itemPos = new Vector3(Random.Range(-90, 90), Random.Range(-90, 90), 0);
-            }
-            else
-            {
-                itemPos = new Vector3(Random.Range(-120, 120), Random.Range(-120, 120), 0);
-            }
-            GameObject newItem = Instantiate(itemGenerateTarget[Random.Range(0, itemGenerateTarget.Length)], itemPos, Quaternion.identity) as GameObject;
-            newItem.transform.parent = GameObject.Find("Items").transform;
-            curAmountOfItem++;
-        }
-    }
+    
 
     /* Make the snake head move forward all the time*/
     void SnakeMove()
@@ -483,45 +376,57 @@ public class SnakeMovement : MonoBehaviour
     }
     void BlueAndWhite()
     {
-        int n = 2;
-        int m = 3;
-        for (int i = 0; i < bodyParts.Count; i++) {
-            if (i == n )
+        if (view.IsMine)
+        {
+            int n = 2;
+            int m = 3;
+            for (int i = 0; i < bodyParts.Count; i++)
             {
-                n = n + 4;
-                bodyParts[i].GetComponent<Renderer>().material = blue;
+                if (i == n)
+                {
+                    n = n + 4;
+                    bodyParts[i].GetComponent<Renderer>().material = blue;
+                }
+                else if (i == m)
+                {
+                    m = m + 4;
+                    bodyParts[i].GetComponent<Renderer>().material = blue;
+                }
             }
-            else if(i==m)
-            {
-                m = m + 4;
-                bodyParts[i].GetComponent<Renderer>().material = blue;
-            }
-                
         }
+        
     }
     void RedAndWhite()
     {
-        for (int i = 0; i < bodyParts.Count; i++)
+        if (view.IsMine)
         {
-            for(int j=0; j < bodyParts.Count; j++)
+            for (int i = 0; i < bodyParts.Count; i++)
             {
+                for (int j = 0; j < bodyParts.Count; j++)
+                {
 
-            }
-            if (i % 2 == 0)
-            {
-                bodyParts[i].GetComponent<Renderer>().material = red;
+                }
+                if (i % 2 == 0)
+                {
+                    bodyParts[i].GetComponent<Renderer>().material = red;
+                }
             }
         }
+        
     }
     void OrangeAndWhite()
     {
-        for (int i = 0; i < bodyParts.Count; i++)
+        if (view.IsMine)
         {
-            if (i % 2 == 0)
+            for (int i = 0; i < bodyParts.Count; i++)
             {
-                bodyParts[i].GetComponent<Renderer>().material = orange;
+                if (i % 2 == 0)
+                {
+                    bodyParts[i].GetComponent<Renderer>().material = orange;
+                }
             }
         }
+        
     }
 
 

@@ -22,7 +22,7 @@ public class Spawns : MonoBehaviour
     void GenerateRobotBeforeBegin()
     {
         int i = 0;
-        while (i < 20)
+        while (i < 0)
         {
             int r = Random.Range(0, 2);
             Vector3 robotPos;
