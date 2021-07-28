@@ -1,16 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MLAPI;
+using MLAPI.Messaging;
 
-public class Spawns : MonoBehaviour
+public class Spawns : NetworkBehaviour
 {
     public List<GameObject> Robots = new List<GameObject>();    // Records the information of Robots
     public int curAmountOfRobot, maxAmountOfRobot = 30;  // The max amount of robots in the map
     public GameObject[] robotGenerateTarget;     // Store the objects of robot snakes
+
+    /* Generate food points every few seconds until there are enough points on the map*/
+    public int curAmountOfFood, maxAmountOfFood = 600;  // The max amount of food in the map
+    public int curAmountOfItem, maxAmountOfItem = 60;  // The max amount of item in the map
+    private float foodGenerateEveryXSecond = 0.1f;   // Generate a food point every 3 seconds
+    public NetworkObject[] foodGenerateTarget;     // Store the objects of food points
+    [SerializeField] private GameObject[] itemGenerateTarget;     // Store the objects of item
+
     // Start is called before the first frame update
     void Start()
     {
-        GenerateFoodBeforeBegin();
+        GenerateFoodBeforeBeginServerRpc();
         GenerateRobotBeforeBegin();
     }
 
@@ -46,7 +56,13 @@ public class Spawns : MonoBehaviour
     }
 
     /* Gernate 200 food points before game start*/
-    void GenerateFoodBeforeBegin()
+    [ServerRpc]
+    private void GenerateFoodBeforeBeginServerRpc()
+    {
+        GenerateFoodBeforeBeginClientRpc();
+    }
+    [ClientRpc]
+    private void GenerateFoodBeforeBeginClientRpc()
     {
         int i = 0;
         while (i < 200)
@@ -61,8 +77,9 @@ public class Spawns : MonoBehaviour
             {
                 foodPos = new Vector3(Random.Range(-60, 60), Random.Range(-60, 60), 0);
             }
-            GameObject newFood = Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)], foodPos, Quaternion.identity) as GameObject;
+            NetworkObject newFood = Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)], foodPos, Quaternion.identity);
             newFood.transform.parent = GameObject.Find("Foods").transform;
+            newFood.SpawnWithOwnership(OwnerClientId);
             curAmountOfFood++;
             i++;
         }
@@ -70,12 +87,7 @@ public class Spawns : MonoBehaviour
 
 
 
-    /* Generate food points every few seconds until there are enough points on the map*/
-    public int curAmountOfFood, maxAmountOfFood = 600;  // The max amount of food in the map
-    public int curAmountOfItem, maxAmountOfItem = 60;  // The max amount of item in the map
-    private float foodGenerateEveryXSecond = 0.1f;   // Generate a food point every 3 seconds
-    public GameObject[] foodGenerateTarget;     // Store the objects of food points
-    public GameObject[] itemGenerateTarget;     // Store the objects of item
+
     void GenerateFoodAndItem()
     {
         StartCoroutine("RunGenerateFoodAndItem", foodGenerateEveryXSecond);
@@ -84,30 +96,7 @@ public class Spawns : MonoBehaviour
     {
         yield return new WaitForSeconds(time);
         StopCoroutine("RunGenerateFoodAndItem");
-        if (curAmountOfFood < maxAmountOfFood)
-        {
-            int r = Random.Range(0, 4);
-            Vector3 foodPos;
-            if (r == 0)
-            {
-                foodPos = new Vector3(Random.Range(-30, 30), Random.Range(-30, 30), 0);
-            }
-            else if (r <= 1)
-            {
-                foodPos = new Vector3(Random.Range(-60, 60), Random.Range(-60, 60), 0);
-            }
-            else if (r <= 2)
-            {
-                foodPos = new Vector3(Random.Range(-90, 90), Random.Range(-90, 90), 0);
-            }
-            else
-            {
-                foodPos = new Vector3(Random.Range(-120, 120), Random.Range(-120, 120), 0);
-            }
-            GameObject newFood = Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)], foodPos, Quaternion.identity) as GameObject;
-            newFood.transform.parent = GameObject.Find("Foods").transform;
-            curAmountOfFood++;
-        }
+        
         if (curAmountOfItem < maxAmountOfItem)
         {
             int r = Random.Range(0, 4);

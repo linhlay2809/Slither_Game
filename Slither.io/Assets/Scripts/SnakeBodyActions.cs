@@ -4,38 +4,22 @@ using System.Collections;
 public class SnakeBodyActions : MonoBehaviour {
 
     private int myOrder;    // The order of this part in the whole snake
-    public GameObject[] head;     // The location of snake head
     public GameObject owner;
     private Vector3 movementVelocity;   // The velocity of current part
     [Range(0.0f, 1.0f)]
     //public float smoothTime = 0.2f;    // The smooth time when a body part follows head
     public float smoothTime = 0.05f;
     //public float smoothTime = 0.3f;
-    public int idPlayer; // get IdPlayer
 
     void Start() {
-        head = GameObject.FindGameObjectsWithTag("Player");
-        foreach(GameObject a in head)
+        for (int i = 0; i < owner.GetComponent<SnakeMovement>().bodyParts.Count; i++)
         {
-            if (a.GetComponent<SnakeMovement>().id == idPlayer)
+            if (gameObject == owner.GetComponent<SnakeMovement>().bodyParts[i].gameObject)
             {
-                owner = a;
-                for (int i = 0; i < a.GetComponent<SnakeMovement>().bodyParts.Count; i++)
-                {
-                    if (gameObject == a.GetComponent<SnakeMovement>().bodyParts[i].gameObject)
-                    {
-                        myOrder = i;
-                        break;
-                    }
-                }
+                myOrder = i;
                 break;
             }
         }
-        
-
-
-
-
     }
 
     void FixedUpdate() {

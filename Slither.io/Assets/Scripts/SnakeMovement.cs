@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using Photon.Pun;
 using UnityEngine.Advertisements;
+using MLAPI;
+using UnityEngine.Networking;
+using MLAPI.Messaging;
 
-public class SnakeMovement : MonoBehaviour
+public class SnakeMovement : NetworkBehaviour
 {
     //	##### added by Yue Chen #####
 	private int moveWay ;    // It determines how to control the movement of snake, gained from initial interface
@@ -16,6 +18,10 @@ public class SnakeMovement : MonoBehaviour
     public List<Transform> bodyParts = new List<Transform>();   // Records the location information of body parts of the snake
 
     public Spawns spawn;
+
+    public GameObject instance;
+    public Camera cameraMain;
+    public Camera cameraMain2;
 
     public float snakeWalkSpeed = 3.5f; // Called in SnakeMove()
     private float snakeRunSpeed = 7.0f;  // Called in SnakeRun()
@@ -40,29 +46,52 @@ public class SnakeMovement : MonoBehaviour
     private float bodySmoothTime; // Called in SetBodySizeAndSmoothTime()
 
     //	##### added by Yue Chen #####
-    public Text countText;
+
     public int length;
     public int id; // id player
-    PhotonView view;
 
     Vector3 currentPos;
     // use this for initialization
     void Start() {
         spawn = GameObject.FindGameObjectWithTag("Spawn").GetComponent<Spawns>();
-		//	##### added by Yue Chen #####
-		moveWay = PlayerPrefs.GetInt("moveWayID",1);    // It determines how to control the movement of snake, gained from initial interface
-		// It determines the skin of the snake, gained from initial interface
-		skinID = PlayerPrefs.GetInt("skinID",1);
-		nickName = PlayerPrefs.GetString("nickname","");
-        view = GetComponent<PhotonView>();
-        // Get id gameobject
-        id = view.ViewID;
+        //	##### added by Yue Chen #####
+        moveWay = PlayerPrefs.GetInt("moveWayID", 1);    // It determines how to control the movement of snake, gained from initial interface
+                                                         // It determines the skin of the snake, gained from initial interface
+        skinID = PlayerPrefs.GetInt("skinID", 1);
+        nickName = PlayerPrefs.GetString("nickname", "");
+        cameraMain = Instantiate(cameraMain2, transform.position, transform.rotation);
+        instance = this.gameObject;
+        if (bodyParts.Count == 0)
+        {
+            currentPos = transform.position;
+        }
+        else
+        {
+            currentPos = bodyParts[bodyParts.Count - 1].position;
+        }
+        AddBodyPart();
+        if (bodyParts.Count == 0)
+        {
+            currentPos = transform.position;
+        }
+        else
+        {
+            currentPos = bodyParts[bodyParts.Count - 1].position;
+        }
+        AddBodyPart();
+        if (IsLocalPlayer)
+        {
+            return;
+        }
+        cameraMain.enabled = false;
+        
+
     }
-	
+
     // update is called once per frame
     void Update()
     {
-        if (view.IsMine)
+        if (IsLocalPlayer)
         {
             MouseControlSnake();
             ColorSnake(skinID);
@@ -78,18 +107,20 @@ public class SnakeMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (view.IsMine)
+        if (IsLocalPlayer)
         {
             SnakeMove();
             SetBodySizeAndSmoothTime();
-            CameraFollowSnake();
+            
             SnakeGlowing(isRunning);
             SnakeMoveAdjust();
             //	##### added by Yue Chen #####
-            countText.text = "G o o d  j o b  !  " + nickName + "\nY o u r  L e n g t h  :  " + length;
+
         }
-            
+        CameraFollowSnake();
     }
+
+    [System.Obsolete]
     void OnCollisionEnter(Collision obj)
     {
         if (obj.gameObject.CompareTag("Food"))
@@ -132,8 +163,7 @@ public class SnakeMovement : MonoBehaviour
                 bodyPartSmoothTime += 0.01f;
                 transform.localScale = curSize;
                 // Scale up camera
-                GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
-                camera.GetComponent<Camera>().orthographicSize += camera.GetComponent<Camera>().orthographicSize * cameraGrowRate;
+                cameraMain.orthographicSize += cameraMain.orthographicSize * cameraGrowRate;
             }
         }
         //	##### added by Morgan #####
@@ -162,7 +192,7 @@ public class SnakeMovement : MonoBehaviour
     {
         Transform newPart = Instantiate(addBodyPart, currentPos, Quaternion.identity) as Transform;
         newPart.parent = GameObject.Find("SnakeBodies").transform;
-        newPart.gameObject.GetComponent<SnakeBodyActions>().idPlayer = id;
+        newPart.GetComponent<SnakeBodyActions>().owner = instance;
         bodyParts.Add(newPart);
     }
 
@@ -181,32 +211,39 @@ public class SnakeMovement : MonoBehaviour
             }
             if (isMyself == false)
             {
-                Dead();
+                DeadServerRpc();
             }
         }
         else if (obj.CompareTag("Boundary"))
         {
-            Dead();
+
+            DeadServerRpc();
         }
     }
-    void Dead()
+    [ServerRpc(Delivery =RpcDelivery.Unreliable)]
+    private void DeadServerRpc()
     {
-        if (view.IsMine)
+        DeadClientRpc();
+    }
+    [ClientRpc(Delivery = RpcDelivery.Unreliable)]
+    private void DeadClientRpc()
+    {
+        while (bodyParts.Count > 0)
         {
-            while (bodyParts.Count > 0)
-            {
-                int lastIndex = bodyParts.Count - 1;
-                Transform lastBodyPart = bodyParts[lastIndex].transform;
-                bodyParts.RemoveAt(lastIndex);
-                GameObject newFood = Instantiate(spawn.foodGenerateTarget[Random.Range(0, spawn.foodGenerateTarget.Length)], lastBodyPart.position, Quaternion.identity) as GameObject;
-                newFood.transform.parent = GameObject.Find("Foods").transform;
-                Destroy(lastBodyPart.gameObject);
-            }
-            Destroy(gameObject);
+            int lastIndex = bodyParts.Count - 1;
+            Transform lastBodyPart = bodyParts[lastIndex].transform;
+            bodyParts.RemoveAt(lastIndex);
+            NetworkObject newFood = Instantiate(spawn.foodGenerateTarget[Random.Range(0, spawn.foodGenerateTarget.Length)], lastBodyPart.position, Quaternion.identity);
+            newFood.transform.parent = GameObject.Find("Foods").transform;
+            Destroy(lastBodyPart.gameObject);
         }
-        
+        if (IsOwner)
+        {
+            NetworkManager.Destroy(gameObject);
+            SceneManager.LoadScene("Slither");
+        }
 
-        SceneManager.LoadScene("Lobby");
+        
     }
     //	##### added by Morgan #####
     IEnumerator speedUpTime()
@@ -232,8 +269,7 @@ public class SnakeMovement : MonoBehaviour
             bodyPartSmoothTime -= 0.01f;
             transform.localScale = curSize;
             // Scale down camera
-            GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
-            camera.GetComponent<Camera>().orthographicSize -= camera.GetComponent<Camera>().orthographicSize * cameraGrowRate;
+            cameraMain.orthographicSize -= cameraMain.orthographicSize * cameraGrowRate;
         }
     }
 
@@ -275,10 +311,9 @@ public class SnakeMovement : MonoBehaviour
     /* Make the camera follow the snake when it moves*/
     void CameraFollowSnake()
     {
-        Transform camera = GameObject.FindGameObjectWithTag("MainCamera").gameObject.transform;
         Vector3 velocity = Vector3.zero;
         // Reach from current position to target position smoothly
-        camera.position = Vector3.SmoothDamp(camera.position,
+        cameraMain.transform.position = Vector3.SmoothDamp(cameraMain.transform.position,
             new Vector3(gameObject.transform.position.x, gameObject.transform.position.y, -10)
             , ref velocity, cameraSmoothTime);
     }
@@ -347,7 +382,7 @@ public class SnakeMovement : MonoBehaviour
     private float radius = 20.0f;
     void MouseControlSnake()
     {
-        Ray ray = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
+        Ray ray = cameraMain.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
         RaycastHit hit; // Store the first obj touched by ray
         Physics.Raycast(ray, out hit, 50.0f); // The third parameter is the max distance
         mousePosition = new Vector3(hit.point.x, hit.point.y, 0);
@@ -376,57 +411,45 @@ public class SnakeMovement : MonoBehaviour
     }
     void BlueAndWhite()
     {
-        if (view.IsMine)
+        int n = 2;
+        int m = 3;
+        for (int i = 0; i < bodyParts.Count; i++)
         {
-            int n = 2;
-            int m = 3;
-            for (int i = 0; i < bodyParts.Count; i++)
+            if (i == n)
             {
-                if (i == n)
-                {
-                    n = n + 4;
-                    bodyParts[i].GetComponent<Renderer>().material = blue;
-                }
-                else if (i == m)
-                {
-                    m = m + 4;
-                    bodyParts[i].GetComponent<Renderer>().material = blue;
-                }
+                n = n + 4;
+                bodyParts[i].GetComponent<Renderer>().material = blue;
+            }
+            else if (i == m)
+            {
+                m = m + 4;
+                bodyParts[i].GetComponent<Renderer>().material = blue;
             }
         }
-        
     }
     void RedAndWhite()
     {
-        if (view.IsMine)
+        for (int i = 0; i < bodyParts.Count; i++)
         {
-            for (int i = 0; i < bodyParts.Count; i++)
+            for (int j = 0; j < bodyParts.Count; j++)
             {
-                for (int j = 0; j < bodyParts.Count; j++)
-                {
 
-                }
-                if (i % 2 == 0)
-                {
-                    bodyParts[i].GetComponent<Renderer>().material = red;
-                }
+            }
+            if (i % 2 == 0)
+            {
+                bodyParts[i].GetComponent<Renderer>().material = red;
             }
         }
-        
     }
     void OrangeAndWhite()
     {
-        if (view.IsMine)
+        for (int i = 0; i < bodyParts.Count; i++)
         {
-            for (int i = 0; i < bodyParts.Count; i++)
+            if (i % 2 == 0)
             {
-                if (i % 2 == 0)
-                {
-                    bodyParts[i].GetComponent<Renderer>().material = orange;
-                }
+                bodyParts[i].GetComponent<Renderer>().material = orange;
             }
         }
-        
     }
 
 
