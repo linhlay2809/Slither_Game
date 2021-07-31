@@ -4,7 +4,7 @@ using UnityEngine;
 using MLAPI;
 using MLAPI.Messaging;
 
-public class Spawns : NetworkBehaviour
+public class Spawns : MonoBehaviour
 {
     public List<GameObject> Robots = new List<GameObject>();    // Records the information of Robots
     public int curAmountOfRobot, maxAmountOfRobot = 30;  // The max amount of robots in the map
@@ -15,12 +15,14 @@ public class Spawns : NetworkBehaviour
     public int curAmountOfItem, maxAmountOfItem = 60;  // The max amount of item in the map
     private float foodGenerateEveryXSecond = 0.1f;   // Generate a food point every 3 seconds
     public NetworkObject[] foodGenerateTarget;     // Store the objects of food points
-    [SerializeField] private GameObject[] itemGenerateTarget;     // Store the objects of item
+    public NetworkObject[] itemGenerateTarget;     // Store the objects of item
+    public bool isSpawnFoodAndItem = false;
+
+    
 
     // Start is called before the first frame update
     void Start()
     {
-        GenerateFoodBeforeBeginServerRpc();
         GenerateRobotBeforeBegin();
     }
 
@@ -57,12 +59,7 @@ public class Spawns : NetworkBehaviour
 
     /* Gernate 200 food points before game start*/
     [ServerRpc]
-    private void GenerateFoodBeforeBeginServerRpc()
-    {
-        GenerateFoodBeforeBeginClientRpc();
-    }
-    [ClientRpc]
-    private void GenerateFoodBeforeBeginClientRpc()
+    public void GenerateFoodBeforeBeginServerRpc()
     {
         int i = 0;
         while (i < 200)
@@ -79,7 +76,7 @@ public class Spawns : NetworkBehaviour
             }
             NetworkObject newFood = Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)], foodPos, Quaternion.identity);
             newFood.transform.parent = GameObject.Find("Foods").transform;
-            newFood.SpawnWithOwnership(OwnerClientId);
+            newFood.GetComponent<NetworkObject>().Spawn();
             curAmountOfFood++;
             i++;
         }
@@ -88,38 +85,69 @@ public class Spawns : NetworkBehaviour
 
 
 
-    void GenerateFoodAndItem()
+    
+    private void GenerateFoodAndItem()
     {
-        StartCoroutine("RunGenerateFoodAndItem", foodGenerateEveryXSecond);
+        StartCoroutine("RunGenerateFoodAndItemServerRpc", foodGenerateEveryXSecond);
     }
-    IEnumerator RunGenerateFoodAndItem(float time)
+    [ServerRpc]
+    IEnumerator RunGenerateFoodAndItemServerRpc(float time)
     {
         yield return new WaitForSeconds(time);
-        StopCoroutine("RunGenerateFoodAndItem");
-        
-        if (curAmountOfItem < maxAmountOfItem)
+        StopCoroutine("RunGenerateFoodAndItemServerRpc");
+        if (isSpawnFoodAndItem == true)
         {
-            int r = Random.Range(0, 4);
-            Vector3 itemPos;
-            if (r == 0)
+            if (curAmountOfFood < maxAmountOfFood)
             {
-                itemPos = new Vector3(Random.Range(-30, 30), Random.Range(-30, 30), 0);
+                int r = Random.Range(0, 4);
+                Vector3 foodPos;
+                if (r == 0)
+                {
+                    foodPos = new Vector3(Random.Range(-30, 30), Random.Range(-30, 30), 0);
+                }
+                else if (r <= 1)
+                {
+                    foodPos = new Vector3(Random.Range(-60, 60), Random.Range(-60, 60), 0);
+                }
+                else if (r <= 2)
+                {
+                    foodPos = new Vector3(Random.Range(-90, 90), Random.Range(-90, 90), 0);
+                }
+                else
+                {
+                    foodPos = new Vector3(Random.Range(-120, 120), Random.Range(-120, 120), 0);
+                }
+                NetworkObject newFood = Instantiate(foodGenerateTarget[Random.Range(0, foodGenerateTarget.Length)], foodPos, Quaternion.identity);
+                newFood.transform.parent = GameObject.Find("Foods").transform;
+                newFood.GetComponent<NetworkObject>().Spawn();
+                curAmountOfFood++;
             }
-            else if (r <= 1)
+            if (curAmountOfItem < maxAmountOfItem)
             {
-                itemPos = new Vector3(Random.Range(-60, 60), Random.Range(-60, 60), 0);
+                int r = Random.Range(0, 4);
+                Vector3 itemPos;
+                if (r == 0)
+                {
+                    itemPos = new Vector3(Random.Range(-30, 30), Random.Range(-30, 30), 0);
+                }
+                else if (r <= 1)
+                {
+                    itemPos = new Vector3(Random.Range(-60, 60), Random.Range(-60, 60), 0);
+                }
+                else if (r <= 2)
+                {
+                    itemPos = new Vector3(Random.Range(-90, 90), Random.Range(-90, 90), 0);
+                }
+                else
+                {
+                    itemPos = new Vector3(Random.Range(-120, 120), Random.Range(-120, 120), 0);
+                }
+                NetworkObject newItem = Instantiate(itemGenerateTarget[Random.Range(0, itemGenerateTarget.Length)], itemPos, Quaternion.identity);
+                newItem.transform.parent = GameObject.Find("Items").transform;
+                newItem.GetComponent<NetworkObject>().Spawn();
+                curAmountOfItem++;
             }
-            else if (r <= 2)
-            {
-                itemPos = new Vector3(Random.Range(-90, 90), Random.Range(-90, 90), 0);
-            }
-            else
-            {
-                itemPos = new Vector3(Random.Range(-120, 120), Random.Range(-120, 120), 0);
-            }
-            GameObject newItem = Instantiate(itemGenerateTarget[Random.Range(0, itemGenerateTarget.Length)], itemPos, Quaternion.identity) as GameObject;
-            newItem.transform.parent = GameObject.Find("Items").transform;
-            curAmountOfItem++;
         }
+        
     }
 }

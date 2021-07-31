@@ -11,10 +11,12 @@ public class MenuScript : MonoBehaviour
 {
     [SerializeField]
     private GameObject menuPanel;
+    public Spawns spawns;
     public InputField inputField;
     [SerializeField] private GameObject leaveButton;
     private void Start()
     {
+        spawns = GameObject.FindGameObjectWithTag("Spawn").GetComponent<Spawns>();
         NetworkManager.Singleton.OnServerStarted += HandleServerStarted;
         NetworkManager.Singleton.OnClientConnectedCallback += HandleClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback += HandleClientDisconnect;
@@ -63,13 +65,15 @@ public class MenuScript : MonoBehaviour
 
     public void Host()
     {
-            NetworkManager.Singleton.ConnectionApprovalCallback += ApprovalCheck;
-            NetworkManager.Singleton.StartHost();
+        NetworkManager.Singleton.ConnectionApprovalCallback += ApprovalCheck;
+        NetworkManager.Singleton.StartHost();
+        spawns.GenerateFoodBeforeBeginServerRpc();
+        spawns.isSpawnFoodAndItem = true;
     }
     public void Join()
     {
-            NetworkManager.Singleton.NetworkConfig.ConnectionData = Encoding.ASCII.GetBytes(inputField.text);
-            NetworkManager.Singleton.StartClient();
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = Encoding.ASCII.GetBytes(inputField.text);
+        NetworkManager.Singleton.StartClient();
     }
     public void Leave()
     {

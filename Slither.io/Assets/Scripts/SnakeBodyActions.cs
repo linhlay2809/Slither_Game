@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using MLAPI;
+using MLAPI.Messaging;
 
 public class SnakeBodyActions : MonoBehaviour {
 

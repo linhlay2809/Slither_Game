@@ -19,9 +19,7 @@ public class SnakeMovement : NetworkBehaviour
 
     public Spawns spawn;
 
-    public GameObject instance;
     public Camera cameraMain;
-    public Camera cameraMain2;
 
     public float snakeWalkSpeed = 3.5f; // Called in SnakeMove()
     private float snakeRunSpeed = 7.0f;  // Called in SnakeRun()
@@ -59,33 +57,17 @@ public class SnakeMovement : NetworkBehaviour
                                                          // It determines the skin of the snake, gained from initial interface
         skinID = PlayerPrefs.GetInt("skinID", 1);
         nickName = PlayerPrefs.GetString("nickname", "");
-        cameraMain = Instantiate(cameraMain2, transform.position, transform.rotation);
-        instance = this.gameObject;
-        if (bodyParts.Count == 0)
-        {
-            currentPos = transform.position;
-        }
-        else
-        {
-            currentPos = bodyParts[bodyParts.Count - 1].position;
-        }
-        AddBodyPart();
-        if (bodyParts.Count == 0)
-        {
-            currentPos = transform.position;
-        }
-        else
-        {
-            currentPos = bodyParts[bodyParts.Count - 1].position;
-        }
-        AddBodyPart();
+        cameraMain = Instantiate(cameraMain, transform.position, transform.rotation);
+
+        AddBodyPartServerRpc();
+
+        AddBodyPartServerRpc();
         if (IsLocalPlayer)
         {
             return;
         }
         cameraMain.enabled = false;
         
-
     }
 
     // update is called once per frame
@@ -125,8 +107,7 @@ public class SnakeMovement : NetworkBehaviour
     {
         if (obj.gameObject.CompareTag("Food"))
         {
-            
-            Destroy(obj.gameObject);
+            NetworkObject.Destroy(obj.gameObject);
             spawn.curAmountOfFood--;
             if (SizeUp(foodCounter) == false)
             {
@@ -134,15 +115,8 @@ public class SnakeMovement : NetworkBehaviour
                 foodCounter++;
                 // The contents in 'if' shouldn't be exectued in logic as we always have several body parts
                 
-                if (bodyParts.Count == 0)
-                {
-                    currentPos = transform.position;
-                }
-                else
-                {
-                    currentPos = bodyParts[bodyParts.Count - 1].position;
-                }
-                AddBodyPart();
+
+                AddBodyPartServerRpc();
             }
             else
             {
@@ -150,15 +124,8 @@ public class SnakeMovement : NetworkBehaviour
                 foodCounter++;
                 // The contents in 'if' shouldn't be exectued in logic as we always have several body parts
                 
-                if (bodyParts.Count == 0)
-                {
-                    currentPos = transform.position;
-                }
-                else
-                {
-                    currentPos = bodyParts[bodyParts.Count - 1].position;
-                }
-                AddBodyPart();
+                
+                AddBodyPartServerRpc();
                 curSize += Vector3.one * growRate;
                 bodyPartSmoothTime += 0.01f;
                 transform.localScale = curSize;
@@ -169,16 +136,15 @@ public class SnakeMovement : NetworkBehaviour
         //	##### added by Morgan #####
         else if (obj.transform.tag == "Item")
         {
+            NetworkObject.Destroy(obj.gameObject);
             if (obj.transform.GetComponent<ParticleSystem>().startColor == new Color32(255, 0, 255, 255))
             {
-                Destroy(obj.gameObject);
                 spawn.curAmountOfItem--;
                 snakeWalkSpeed += 3.5f;
                 StartCoroutine("speedUpTime");
             }
             if (obj.transform.GetComponent<ParticleSystem>().startColor == new Color32(0, 255, 0, 255))
             {
-                Destroy(obj.gameObject);
                 spawn.curAmountOfItem--;
                 if (bodyParts.Count > 4)
                 {
@@ -188,14 +154,27 @@ public class SnakeMovement : NetworkBehaviour
             }
         }
     }
-    void AddBodyPart()
+    [ServerRpc(Delivery = RpcDelivery.Unreliable)]
+    void AddBodyPartServerRpc()
     {
-        Transform newPart = Instantiate(addBodyPart, currentPos, Quaternion.identity) as Transform;
+        AddBodyPartClientRpc();
+    }
+    [ClientRpc(Delivery = RpcDelivery.Unreliable)]
+    void AddBodyPartClientRpc()
+    {
+        if (this.bodyParts.Count == 0)
+        {
+            currentPos = this.transform.position;
+        }
+        else
+        {
+            currentPos = this.bodyParts[bodyParts.Count - 1].position;
+        }
+        Transform newPart = Instantiate(addBodyPart, this.currentPos, Quaternion.identity) as Transform;
         newPart.parent = GameObject.Find("SnakeBodies").transform;
-        newPart.GetComponent<SnakeBodyActions>().owner = instance;
+        newPart.GetComponent<SnakeBodyActions>().owner = this.gameObject;
         bodyParts.Add(newPart);
     }
-
 
     /* When the head encounters an object, figure out what to do*/
     void OnTriggerEnter(Collider obj)
@@ -212,38 +191,38 @@ public class SnakeMovement : NetworkBehaviour
             if (isMyself == false)
             {
                 DeadServerRpc();
+
             }
         }
         else if (obj.CompareTag("Boundary"))
         {
-
             DeadServerRpc();
+
         }
     }
-    [ServerRpc(Delivery =RpcDelivery.Unreliable)]
+    [ServerRpc]
     private void DeadServerRpc()
     {
         DeadClientRpc();
     }
-    [ClientRpc(Delivery = RpcDelivery.Unreliable)]
+    [ClientRpc]
     private void DeadClientRpc()
     {
-        while (bodyParts.Count > 0)
+        while (this.bodyParts.Count > 0)
         {
-            int lastIndex = bodyParts.Count - 1;
-            Transform lastBodyPart = bodyParts[lastIndex].transform;
-            bodyParts.RemoveAt(lastIndex);
+            int lastIndex = this.bodyParts.Count - 1;
+            Transform lastBodyPart = this.bodyParts[lastIndex].transform;
+            Destroy(lastBodyPart.gameObject);
+            this.bodyParts.RemoveAt(lastIndex); 
             NetworkObject newFood = Instantiate(spawn.foodGenerateTarget[Random.Range(0, spawn.foodGenerateTarget.Length)], lastBodyPart.position, Quaternion.identity);
             newFood.transform.parent = GameObject.Find("Foods").transform;
-            Destroy(lastBodyPart.gameObject);
+            
         }
-        if (IsOwner)
+        if (!IsLocalPlayer)
         {
-            NetworkManager.Destroy(gameObject);
-            SceneManager.LoadScene("Slither");
+            return;
         }
-
-        
+        NetworkObject.Destroy(this.gameObject);
     }
     //	##### added by Morgan #####
     IEnumerator speedUpTime()
@@ -352,18 +331,28 @@ public class SnakeMovement : NetworkBehaviour
         }
         if (isRunning == true)
         {
-            StartCoroutine("LosingBodyParts");
+            LosingBodyServerRpc();
         }
         
+    }
+    [ServerRpc]
+    private void LosingBodyServerRpc()
+    {
+        LosingBodyClientRpc();
+    }
+    [ClientRpc]
+    private void LosingBodyClientRpc()
+    {
+        StartCoroutine("LosingBodyParts");
     }
     IEnumerator LosingBodyParts() {
         yield return new WaitForSeconds(1f);  // Every 0.8 second lose one body part
         StopCoroutine("LosingBodyParts");
-        int lastIndex = bodyParts.Count - 1;
-        Transform lastBodyPart = bodyParts[lastIndex].transform;
-        bodyParts.RemoveAt(lastIndex);
+        int lastIndex = this.bodyParts.Count - 1;
+        Transform lastBodyPart = this.bodyParts[lastIndex].transform;
+        this.bodyParts.RemoveAt(lastIndex);
         Instantiate(spawn.foodGenerateTarget[Random.Range(0, spawn.foodGenerateTarget.Length)], lastBodyPart.position, Quaternion.identity);
-        Destroy(lastBodyPart.gameObject);
+        NetworkObject.Destroy(lastBodyPart.gameObject);
         spawn.curAmountOfFood++;
         foodCounter--;
 		length--;
@@ -371,7 +360,7 @@ public class SnakeMovement : NetworkBehaviour
     }
     /* If snake is running, then glowing*/
     void SnakeGlowing(bool isRunning) {
-        foreach (Transform part in bodyParts) {
+        foreach (Transform part in this.bodyParts) {
             part.Find("Glowing").gameObject.SetActive(isRunning);
         }
     }
